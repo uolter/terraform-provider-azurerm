@@ -36,9 +36,19 @@ func (ResourceGroupDataSource) Name() string {
 	return "azurerm_resource_group_2"
 }
 
+type ResourceGroupArguments struct {
+	Name string `json:"name"`
+}
+
 func (ResourceGroupDataSource) Read(ctx context.Context, config *common.TerraformConfiguration, meta interface{}) error {
 	client := meta.(*clients.Client).Resource.GroupsClient
-	name := config.ResourceData.Get("name").(string)
+
+	input := ResourceGroupArguments{}
+	if err := config.DeserializeIntoType(&input); err != nil {
+		return err
+	}
+
+	name := input.Name
 	resp, err := client.Get(ctx, name)
 	if err != nil {
 		return fmt.Errorf("reading resource group: %+v", err)

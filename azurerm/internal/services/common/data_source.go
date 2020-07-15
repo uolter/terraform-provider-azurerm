@@ -2,6 +2,7 @@ package common
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -15,6 +16,23 @@ import (
 type TerraformConfiguration struct {
 	ResourceData *schema.ResourceData
 	Logger       *log.Logger
+}
+
+func (c TerraformConfiguration) DeserializeIntoType(input interface{}) error {
+	// TODO: raise an error if it's not a pointer
+
+	// let's assume the internal field for attributes/schema is exposed here
+	attrs := map[string]interface{}{
+		"name": c.ResourceData.Get("name").(string),
+	}
+
+	// definitely ways to improve this, this is /super/ lazy but it's fine
+	serialized, err := json.Marshal(attrs)
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(serialized, input)
 }
 
 type DataSource interface {
