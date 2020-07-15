@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/location"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/services/common"
 )
@@ -40,8 +39,8 @@ type ResourceGroupArguments struct {
 	Name string `json:"name"`
 }
 
-func (ResourceGroupDataSource) Read(ctx context.Context, config *common.TerraformConfiguration, meta interface{}) error {
-	client := meta.(*clients.Client).Resource.GroupsClient
+func (ResourceGroupDataSource) Read(ctx context.Context, config *common.TerraformConfiguration) error {
+	client := config.Client.Resource.GroupsClient
 
 	input := ResourceGroupArguments{}
 	if err := config.DeserializeIntoType(&input); err != nil {

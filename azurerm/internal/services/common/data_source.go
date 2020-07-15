@@ -2,10 +2,10 @@ package common
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"os"
+	"testing"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -13,33 +13,11 @@ import (
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/timeouts"
 )
 
-type TerraformConfiguration struct {
-	ResourceData *schema.ResourceData
-	Logger       *log.Logger
-}
-
-func (c TerraformConfiguration) DeserializeIntoType(input interface{}) error {
-	// TODO: raise an error if it's not a pointer
-
-	// let's assume the internal field for attributes/schema is exposed here
-	attrs := map[string]interface{}{
-		"name": c.ResourceData.Get("name").(string),
-	}
-
-	// definitely ways to improve this, this is /super/ lazy but it's fine
-	serialized, err := json.Marshal(attrs)
-	if err != nil {
-		return err
-	}
-
-	return json.Unmarshal(serialized, input)
-}
-
 type DataSource interface {
 	Arguments() map[string]*schema.Schema
 	Attributes() map[string]*schema.Schema
 	Name() string
-	Read(ctx context.Context, config *TerraformConfiguration, meta interface{}) error
+	Read(ctx context.Context, config *TerraformConfiguration) error
 	ReadTimeout() time.Duration
 }
 
@@ -86,15 +64,33 @@ func toSDKDataSource(source DataSource) (*schema.Resource, error) {
 			// TODO: switch out for CreateContext
 			ctx, cancel := timeouts.ForRead(meta.(*clients.Client).StopContext, data)
 			defer cancel()
+			client := meta.(*clients.Client)
 
 			config := &TerraformConfiguration{
+				Client:       client,
 				ResourceData: data,
 				Logger:       log.New(os.Stdout, "HEYO", 1),
 			}
-			return source.Read(ctx, config, meta)
+			return source.Read(ctx, config)
 		},
 	}
 	return &resource, nil
 }
 
-// TODO: methods for validating instances of the Data Source struct at unit test time
+func ValidateDataSource(t *testing.T, input DataSource) {
+	for k, v := range input.Attributes() {
+		if !v.Computed {
+			t.Fatalf("%q must be computed if an Attribute", k)
+		}
+
+		if v.Required || v.Optional {
+			t.Fatalf("%q cannot be Required/Optional if it's an Attribute", k)
+		}
+	}
+
+	for k, v := range input.Attributes() {
+		if v.Computed && !(v.Required || v.Optional) {
+			t.Fatalf("%q cannot be read-only as an Argument - make it an Attribute", k)
+		}
+	}
+}
