@@ -9,6 +9,7 @@ import (
 )
 
 type TerraformConfiguration struct {
+        // this is obviously Azure specific, but it could go elsewhere
 	Client       *clients.Client
 	ResourceData *schema.ResourceData
 	Logger       *log.Logger
