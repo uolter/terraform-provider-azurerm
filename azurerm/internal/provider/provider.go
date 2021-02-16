@@ -38,6 +38,8 @@ func azureProvider(supportLegacyTestSuite bool) terraform.ResourceProvider {
 		log.Printf(f, v...)
 	}
 
+	debugLog("[DEBUG] RUN Custom provider.")
+
 	dataSources := make(map[string]*schema.Resource)
 	resources := make(map[string]*schema.Resource)
 

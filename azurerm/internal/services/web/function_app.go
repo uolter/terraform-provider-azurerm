@@ -214,7 +214,6 @@ func getBasicFunctionAppAppSettings(d *schema.ResourceData, appServiceTier, endp
 	storagePropName := "AzureWebJobsStorage"
 	functionVersionPropName := "FUNCTIONS_EXTENSION_VERSION"
 
-	contentSharePropName := "WEBSITE_CONTENTSHARE"
 	contentFileConnStringPropName := "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING"
 
 	// TODO 3.0 - remove this logic for determining which storage account connection string to use
@@ -246,7 +245,6 @@ func getBasicFunctionAppAppSettings(d *schema.ResourceData, appServiceTier, endp
 	}
 
 	functionVersion := d.Get("version").(string)
-	contentShare := strings.ToLower(d.Get("name").(string)) + "-content"
 
 	basicSettings := []web.NameValuePair{
 		{Name: &storagePropName, Value: &storageConnection},
@@ -261,7 +259,6 @@ func getBasicFunctionAppAppSettings(d *schema.ResourceData, appServiceTier, endp
 	}
 
 	consumptionSettings := []web.NameValuePair{
-		{Name: &contentSharePropName, Value: &contentShare},
 		{Name: &contentFileConnStringPropName, Value: &storageConnection},
 	}
 
